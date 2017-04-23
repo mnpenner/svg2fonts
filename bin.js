@@ -3,7 +3,7 @@
 /* eslint-disable no-sync */
 'use strict';
 
-const {ArgumentParser, Const} = require('argparse');
+const {ArgumentParser} = require('argparse');
 const parser = new ArgumentParser({
     version: require('./package.json').version,
     addHelp: true,
@@ -17,20 +17,41 @@ parser.addArgument(
 );
 
 parser.addArgument(
-    ['-d', '--out-dir'],
+    ['-o', '--out-dir'],
     {
         help: 'Output directory'
     }
 );
 
+parser.addArgument(
+    ['-n', '--font-name'],
+    {
+        help: 'Font name',
+    }
+);
+
+parser.addArgument(
+    ['-f', '--file-name'],
+    {
+        help: 'File name',
+    }
+);
+
+parser.addArgument(
+    ['-p', '--prefix'],
+    {
+        help: 'CSS class name prefix',
+        defaultValue: 'icon-',
+    }
+);
+
 const args = parser.parseArgs();
-console.dir(args);
-process.exit();
+
+// console.log(args);process.exit();
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-"use strict";
 
 const svgicons2svgfont = require('svgicons2svgfont');
 const fs = require('fs');
@@ -43,23 +64,27 @@ const cssesc = require('cssesc');
 const he = require('he');
 const _ = require('lodash');
 const mkdirp = require('mkdirp');
+const sanitizeFileName = require("sanitize-filename");
 
-const quoteStr = s => cssesc(s, {wrap: true});
-const quoteId = s => cssesc(s, {isIdentifier: true});
+const cssStr = s => cssesc(s, {wrap: true});
+const cssId = s => cssesc(s, {isIdentifier: true});
 
-const inputDir = path.normalize(`${__dirname}/../artifacts/icons`);
-const outputDir = path.normalize(`${__dirname}/../assets/fonts`);
+const inputDir = args.src;
+const outputDir = args.out_dir || '.';
+const fontName = args.font_name || path.basename(inputDir);
+const fileName = args.file_name || sanitizeFileName(fontName);
+const cssPrefix = args.prefix || 'icon-';
 
-const svgFontFile = `${outputDir}/wxicons.svg`;
-const ttfFontFile = `${outputDir}/wxicons.ttf`;
-const woffFontFile = `${outputDir}/wxicons.woff`;
-const woff2FontFile = `${outputDir}/wxicons.woff2`;
-const eotFile = `${outputDir}/wxicons.eot`;
-const cssFile = `${outputDir}/wxicons.css`;
-const htmlFile = `${outputDir}/wxicons.html`;
-const jsFile = `${outputDir}/wxicons.js`; // map icon name to css class and/or character
+const svgFontFile = `${outputDir}/${fileName}.svg`;
+const ttfFontFile = `${outputDir}/${fileName}.ttf`;
+const woffFontFile = `${outputDir}/${fileName}.woff`;
+const woff2FontFile = `${outputDir}/${fileName}.woff2`;
+const eotFile = `${outputDir}/${fileName}.eot`;
+const cssFile = `${outputDir}/${fileName}.css`;
+const htmlFile = `${outputDir}/${fileName}.html`;
+const jsFile = `${outputDir}/${fileName}.js`; // map icon name to css class and/or character
 
-const fontName = 'wxicons';
+
 
 mkdirp.sync(outputDir);
 
@@ -99,19 +124,19 @@ const htmlDir = path.dirname(htmlFile);
 
 let css = `
 @font-face {
-  font-family: ${quoteStr(fontName)};
-  src: url(${quoteStr(path.relative(cssDir, eotFile))}); /* IE9 Compat Modes */
-  src: url(${quoteStr(path.relative(cssDir, eotFile)+'?iefix')}) format('embedded-opentype'), /* IE6-IE8 */
-    url(${quoteStr(path.relative(cssDir, woff2FontFile))}) format('woff2'), /* Edge 14+, Chrome 36+, Firefox 39+, some mobile */
-    url(${quoteStr(path.relative(cssDir, woffFontFile))}) format('woff'),  /* IE 9+, Edge, Firefox 3.6+, Chrome 5+, Safari 5.1+ */
-    url(${quoteStr(path.relative(cssDir, ttfFontFile))}) format('truetype'), /* Safari, Android, iOS */
-    url(${quoteStr(path.relative(cssDir, svgFontFile))}) format('svg'); /* Legacy iOS */
+  font-family: ${cssStr(fontName)};
+  src: url(${cssStr(path.relative(cssDir, eotFile))}); /* IE9 Compat Modes */
+  src: url(${cssStr(path.relative(cssDir, eotFile)+'?iefix')}) format('embedded-opentype'), /* IE6-IE8 */
+    url(${cssStr(path.relative(cssDir, woff2FontFile))}) format('woff2'), /* Edge 14+, Chrome 36+, Firefox 39+, some mobile */
+    url(${cssStr(path.relative(cssDir, woffFontFile))}) format('woff'),  /* IE 9+, Edge, Firefox 3.6+, Chrome 5+, Safari 5.1+ */
+    url(${cssStr(path.relative(cssDir, ttfFontFile))}) format('truetype'), /* Safari, Android, iOS */
+    url(${cssStr(path.relative(cssDir, svgFontFile))}) format('svg'); /* Legacy iOS */
   font-weight: normal;
   font-style: normal;
 }
-[class^="icon-"], [class*=" icon-"] {
+[class^="${cssesc(cssPrefix)}"], [class*=" ${cssesc(cssPrefix)}"] {
   /* use !important to prevent issues with browser extensions that change fonts */
-  font-family: ${quoteStr(fontName)} !important;
+  font-family: ${cssStr(fontName)} !important;
   speak: none;
   font-style: normal;
   font-weight: normal;
@@ -140,9 +165,9 @@ for(let icon of icons) {
     };
     fontStream.write(glyph);
 
-    let className = `icon-${iconName}`;
-    cssIcons.push(`.${quoteId(className)}:before {
-  content: ${quoteStr(iconChar)}
+    let className = `${cssPrefix}${iconName}`;
+    cssIcons.push(`.${cssId(className)}:before {
+  content: ${cssStr(iconChar)}
 }`);
 
     htmlIcons.push(`<a href="" class="cell"><i class="icon ${he.escape(className)}"></i><span class="classname">${he.escape(className)}</span></a>`);
@@ -168,7 +193,7 @@ let html = `
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>${he.escape(fontName)}</title>
+    <title>${he.escape(fontName)} Preview</title>
     <link rel="stylesheet" href="${he.escape(path.relative(htmlDir, cssFile))}">
     <style>
         .icon {
@@ -182,8 +207,10 @@ let html = `
         }
         .container {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
+            flex-flow: row wrap;
+            /*align-content: stretch;
+            align-items: flex-start;*/
+            justify-content: space-around;
         }
         /*
         .container::after {
@@ -197,10 +224,12 @@ let html = `
             border: 1px solid #ccc;
             padding: 5px;
             margin: 3px;
-            /*flex: 1;*/
+            flex: 1 1 100px;
             width: 100px;
             text-decoration: none;
             color: black;
+            min-width: 100px;
+            max-width: 150px;
         }
         .cell:hover {
             background-color: #3af;
@@ -214,7 +243,7 @@ let html = `
             font-family: monospace;
             font-size: 10px;
             white-space: nowrap;
-            max-width: 100px;
+            max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
         }
