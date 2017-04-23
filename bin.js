@@ -3,7 +3,22 @@
 /* eslint-disable no-sync */
 'use strict';
 
+const svgicons2svgfont = require('svgicons2svgfont');
+const fs = require('fs');
+const path = require('path');
+const svg2ttf = require('svg2ttf');
+const ttf2woff = require('ttf2woff');
+const ttf2woff2 = require('ttf2woff2');
+const ttf2eot = require('ttf2eot');
+const cssesc = require('cssesc');
+const he = require('he');
+const _ = require('lodash');
+const mkdirp = require('mkdirp');
+const sanitizeFileName = require("sanitize-filename");
+const {readDirDeep} = require('./util');
 const {ArgumentParser} = require('argparse');
+
+
 const parser = new ArgumentParser({
     version: require('./package.json').version,
     addHelp: true,
@@ -31,9 +46,9 @@ parser.addArgument(
 );
 
 parser.addArgument(
-    ['-f', '--file-name'],
+    ['-f', '--file'],
     {
-        help: 'File name',
+        help: 'Output filenames (without extension)',
     }
 );
 
@@ -41,11 +56,22 @@ parser.addArgument(
     ['-p', '--prefix'],
     {
         help: 'CSS class name prefix',
-        defaultValue: 'icon-',
+    }
+);
+
+parser.addArgument(
+    ['-b', '--base'],
+    {
+        help: 'CSS class name added to all icons',
     }
 );
 
 const args = parser.parseArgs();
+
+if(!args.prefix && !args.base) {
+    console.error(`${path.basename(process.argv[1])}: Not enough arguments. Either --prefix, --base or both must be provided.`);
+    process.exit(1);
+}
 
 // console.log(args);process.exit();
 
@@ -53,27 +79,15 @@ const args = parser.parseArgs();
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-const svgicons2svgfont = require('svgicons2svgfont');
-const fs = require('fs');
-const path = require('path');
-const svg2ttf = require('svg2ttf');
-const ttf2woff = require('ttf2woff');
-const ttf2woff2 = require('ttf2woff2');
-const ttf2eot = require('ttf2eot');
-const cssesc = require('cssesc');
-const he = require('he');
-const _ = require('lodash');
-const mkdirp = require('mkdirp');
-const sanitizeFileName = require("sanitize-filename");
-
 const cssStr = s => cssesc(s, {wrap: true});
 const cssId = s => cssesc(s, {isIdentifier: true});
 
 const inputDir = args.src;
 const outputDir = args.out_dir || '.';
 const fontName = args.font_name || path.basename(inputDir);
-const fileName = args.file_name || sanitizeFileName(fontName);
-const cssPrefix = args.prefix || 'icon-';
+const fileName = args.file || sanitizeFileName(fontName);
+const cssPrefix = args.prefix || '';
+const cssBase = args.base || null;
 
 const svgFontFile = `${outputDir}/${fileName}.svg`;
 const ttfFontFile = `${outputDir}/${fileName}.ttf`;
@@ -85,7 +99,6 @@ const htmlFile = `${outputDir}/${fileName}.html`;
 const jsFile = `${outputDir}/${fileName}.js`; // map icon name to css class and/or character
 
 
-
 mkdirp.sync(outputDir);
 
 const fontStream = svgicons2svgfont({
@@ -94,7 +107,8 @@ const fontStream = svgicons2svgfont({
     fontHeight: 5000,
     fixedWidth: false,
     centerHorizontally: false,
-    log: () => {},
+    log: () => {
+    },
 });
 
 const svgFileStream = fs.createWriteStream(svgFontFile);
@@ -109,24 +123,22 @@ fontStream.pipe(svgFileStream)
     });
 
 
-// TODO: make this async
-const icons = fs.readdirSync(inputDir)
-    .map(f => path.resolve(inputDir, f))
-    .filter(f => !fs.statSync(f).isDirectory());
+readDirDeep(inputDir).then(icons => {
+    const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+    icons.sort(collator.compare);
 
-const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
-icons.sort(collator.compare);
+    // console.log(icons);process.exit();
 
-let codePoint = 0xF000;
+    let codePoint = 0xF000;
 
-const cssDir = path.dirname(cssFile);
-const htmlDir = path.dirname(htmlFile);
+    const cssDir = path.dirname(cssFile);
+    const htmlDir = path.dirname(htmlFile);
 
-let css = `
+    let css = `
 @font-face {
   font-family: ${cssStr(fontName)};
   src: url(${cssStr(path.relative(cssDir, eotFile))}); /* IE9 Compat Modes */
-  src: url(${cssStr(path.relative(cssDir, eotFile)+'?iefix')}) format('embedded-opentype'), /* IE6-IE8 */
+  src: url(${cssStr(path.relative(cssDir, eotFile) + '?iefix')}) format('embedded-opentype'), /* IE6-IE8 */
     url(${cssStr(path.relative(cssDir, woff2FontFile))}) format('woff2'), /* Edge 14+, Chrome 36+, Firefox 39+, some mobile */
     url(${cssStr(path.relative(cssDir, woffFontFile))}) format('woff'),  /* IE 9+, Edge, Firefox 3.6+, Chrome 5+, Safari 5.1+ */
     url(${cssStr(path.relative(cssDir, ttfFontFile))}) format('truetype'), /* Safari, Android, iOS */
@@ -134,7 +146,7 @@ let css = `
   font-weight: normal;
   font-style: normal;
 }
-[class^="${cssesc(cssPrefix)}"], [class*=" ${cssesc(cssPrefix)}"] {
+${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${cssId(cssPrefix)}"]`} {
   /* use !important to prevent issues with browser extensions that change fonts */
   font-family: ${cssStr(fontName)} !important;
   speak: none;
@@ -142,6 +154,7 @@ let css = `
   font-weight: normal;
   font-variant: normal;
   text-transform: none;
+  text-rendering: optimizeSpeed; /* Kerning and ligatures aren't needed */
   line-height: 1;
 
   /* Better Font Rendering =========== */
@@ -151,44 +164,58 @@ let css = `
 `.trimLeft();
 
 
-let cssIcons = [];
-let htmlIcons = [];
-let iconMap = {};
+    let cssIcons = [];
+    let htmlIcons = [];
+    let iconMap = {};
 
-for(let icon of icons) {
-    let glyph = fs.createReadStream(icon);
-    let iconName = path.basename(icon, '.svg');
-    let iconChar = String.fromCodePoint(codePoint++);
-    glyph.metadata = {
-        unicode: [iconChar],
-        name: iconName,
-    };
-    fontStream.write(glyph);
+    for(let icon of icons) {
+        let glyph = fs.createReadStream(icon);
 
-    let className = `${cssPrefix}${iconName}`;
-    cssIcons.push(`.${cssId(className)}:before {
+        let iconName = path.relative(inputDir, icon).slice(0, -4).replace(/[\/\\]+/g, '-');
+
+        let iconChar = String.fromCodePoint(codePoint++);
+        glyph.metadata = {
+            unicode: [iconChar],
+            name: iconName,
+        };
+        fontStream.write(glyph);
+
+
+        let className = `${cssPrefix}${iconName}`;
+
+        let cssSelector = `.${cssId(className)}`;
+        if(!cssPrefix) {
+            cssSelector = `.${cssBase}${cssSelector}`;
+        }
+
+        let htmlClass = className;
+        if(cssBase) {
+            htmlClass = `${cssBase} ${htmlClass}`;
+        }
+
+        cssIcons.push(`${cssSelector}:before {
   content: ${cssStr(iconChar)}
 }`);
 
-    htmlIcons.push(`<a href="" class="cell"><i class="icon ${he.escape(className)}"></i><span class="classname">${he.escape(className)}</span></a>`);
-    iconMap[_.camelCase(iconName)] = className;
-}
+        htmlIcons.push(`<a href="" class="icon-link"><i class="icon-preview ${he.escape(htmlClass)}"></i><span class="classname">${he.escape(htmlClass)}</span></a>`);
+        iconMap[_.camelCase(iconName)] = htmlClass;
+    }
 
-css += cssIcons.join('\n');
+    css += cssIcons.join('\n');
 
-fontStream.end();
+    fontStream.end();
 
-fs.writeFile(jsFile, `export default ${JSON.stringify(iconMap,null,4)};`, {encoding: 'utf8'}, err => {
-    if(err) throw err;
-    console.log(`Wrote ${jsFile}`);
-});
+    fs.writeFile(jsFile, `export default ${JSON.stringify(iconMap, null, 4)};`, {encoding: 'utf8'}, err => {
+        if(err) throw err;
+        console.log(`Wrote ${jsFile}`);
+    });
 
-fs.writeFile(cssFile, css, {encoding: 'utf8'}, err => {
-    if(err) throw err;
-    console.log(`Wrote ${cssFile}`);
-});
+    fs.writeFile(cssFile, css, {encoding: 'utf8'}, err => {
+        if(err) throw err;
+        console.log(`Wrote ${cssFile}`);
+    });
 
-let html = `
+    let html = `
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -196,7 +223,11 @@ let html = `
     <title>${he.escape(fontName)} Preview</title>
     <link rel="stylesheet" href="${he.escape(path.relative(htmlDir, cssFile))}">
     <style>
-        .icon {
+        .page-title {
+            font-family: Helvetica, Arial, Sans-Serif;
+            margin: 20px 0 10px 0;
+        }
+        .icon-preview {
             font-size: 32px;
             background-color: #eee;
         }
@@ -218,7 +249,7 @@ let html = `
             flex-grow: 2147483647;
         }
         */
-        .cell {
+        .icon-link {
             display: block;
             text-align: center;
             border: 1px solid #ccc;
@@ -231,11 +262,11 @@ let html = `
             min-width: 100px;
             max-width: 150px;
         }
-        .cell:hover {
+        .icon-link:hover {
             background-color: #3af;
             color: white;
         }
-        .cell:hover .icon {
+        .icon-link:hover .icon-preview {
             background-color: #2E99E6;
         }
         .classname {
@@ -251,13 +282,13 @@ let html = `
   </head>
   <body>
     <div class="page-wrap">
-        <h1>${he.escape(fontName)}</h1>
+        <h1 class="page-title">${he.escape(fontName)}</h1>
         <div class="container">
             ${htmlIcons.join('\n')}
         </div>
     </div>
     <script>
-        [].forEach.call(document.querySelectorAll( '.cell' ), function (a) {
+        [].forEach.call(document.querySelectorAll( '.icon-link' ), function (a) {
             a.addEventListener('click', function(ev) {
                 ev.preventDefault();
                 let classname = a.querySelector('.classname');
@@ -276,9 +307,10 @@ let html = `
 </html>
 `;
 
-fs.writeFile(htmlFile, html, {encoding: 'utf8'}, err => {
-    if(err) throw err;
-    console.log(`Wrote ${htmlFile}`);
+    fs.writeFile(htmlFile, html, {encoding: 'utf8'}, err => {
+        if(err) throw err;
+        console.log(`Wrote ${htmlFile}`);
+    });
 });
 
 function createFonts() {
