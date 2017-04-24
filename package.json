@@ -13,7 +13,7 @@
     "ttf2woff2": "^2.0.3"
   },
   "name": "svg2fonts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "repository": "https://bitbucket.org/nucleuslabs/svg2iconfont",
   "author": "Mark Penner <mpenner@nucleuslabs.com>",
   "license": "MIT",

@@ -147,17 +147,14 @@ readDirDeep(inputDir).then(icons => {
   font-style: normal;
 }
 ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${cssId(cssPrefix)}"]`} {
-  /* use !important to prevent issues with browser extensions that change fonts */
-  font-family: ${cssStr(fontName)} !important;
+  font-family: ${cssStr(fontName)} !important; /* Use !important to prevent issues with browser extensions that change fonts */
   speak: none;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
   text-transform: none;
-  text-rendering: optimizeSpeed; /* Kerning and ligatures aren't needed */
   line-height: 1;
-
-  /* Better Font Rendering =========== */
+  text-rendering: optimizeSpeed; /* Kerning and ligatures aren't needed */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -197,7 +194,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
   content: ${cssStr(iconChar)}
 }`);
 
-        htmlIcons.push(`<a href="" class="icon-link"><i class="icon-preview ${he.escape(htmlClass)}"></i><span class="classname">${he.escape(htmlClass)}</span></a>`);
+        htmlIcons.push(`<a href="" class="icon-link"><i class="${he.escape(htmlClass)}"></i><span class="classname">${he.escape(htmlClass)}</span></a>`);
         iconMap[_.camelCase(iconName)] = htmlClass;
     }
 
@@ -227,10 +224,6 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
             font-family: Helvetica, Arial, Sans-Serif;
             margin: 20px 0 10px 0;
         }
-        .icon-preview {
-            font-size: 32px;
-            background-color: #eee;
-        }
         .page-wrap {
             margin: 0 auto;
             max-width: 1000px;
@@ -239,16 +232,8 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         .container {
             display: flex;
             flex-flow: row wrap;
-            /*align-content: stretch;
-            align-items: flex-start;*/
             justify-content: space-around;
         }
-        /*
-        .container::after {
-            content: '';
-            flex-grow: 2147483647;
-        }
-        */
         .icon-link {
             display: block;
             text-align: center;
@@ -266,7 +251,11 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
             background-color: #3af;
             color: white;
         }
-        .icon-link:hover .icon-preview {
+        .icon-link > i {
+            font-size: 32px;
+            background-color: #eee;
+        }
+        .icon-link:hover > i {
             background-color: #2E99E6;
         }
         .classname {
@@ -284,7 +273,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
     <div class="page-wrap">
         <h1 class="page-title">${he.escape(fontName)}</h1>
         <div class="container">
-            ${htmlIcons.join('\n')}
+            ${htmlIcons.join('\n            ')}
         </div>
     </div>
     <script>
@@ -305,7 +294,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
     </script>
   </body>
 </html>
-`;
+`.trimLeft();
 
     fs.writeFile(htmlFile, html, {encoding: 'utf8'}, err => {
         if(err) throw err;
