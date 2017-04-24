@@ -182,7 +182,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
 
         let cssSelector = `.${cssId(className)}`;
         if(!cssPrefix) {
-            cssSelector = `.${cssBase}${cssSelector}`;
+            cssSelector = `.${cssId(cssBase)}${cssSelector}`;
         }
 
         let htmlClass = className;
