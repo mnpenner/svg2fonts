@@ -194,7 +194,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
   content: ${cssStr(iconChar)}
 }`);
 
-        htmlIcons.push(`<a href="" class="icon-link"><i class="${he.escape(htmlClass)}"></i><span class="classname">${he.escape(htmlClass)}</span></a>`);
+        htmlIcons.push(`<a href="" class="s2i__icon-link"><i class="${he.escape(htmlClass)}"></i><span class="s2i__classname">${he.escape(htmlClass)}</span></a>`);
         iconMap[_.camelCase(iconName)] = htmlClass;
     }
 
@@ -220,21 +220,21 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
     <title>${he.escape(fontName)} Preview</title>
     <link rel="stylesheet" href="${he.escape(path.relative(htmlDir, cssFile))}">
     <style>
-        .page-title {
+        .s2i__page-title {
             font-family: Helvetica, Arial, Sans-Serif;
             margin: 20px 0 10px 0;
         }
-        .page-wrap {
+        .s2i__page-wrap {
             margin: 0 auto;
             max-width: 1000px;
             padding: 0 1rem;
         }
-        .container {
+        .s2i__container {
             display: flex;
             flex-flow: row wrap;
             justify-content: space-around;
         }
-        .icon-link {
+        .s2i__icon-link {
             display: block;
             text-align: center;
             border: 1px solid #ccc;
@@ -247,18 +247,18 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
             min-width: 100px;
             max-width: 150px;
         }
-        .icon-link:hover {
+        .s2i__icon-link:hover {
             background-color: #3af;
             color: white;
         }
-        .icon-link > i {
+        .s2i__icon-link > i {
             font-size: 32px;
             background-color: #eee;
         }
-        .icon-link:hover > i {
+        .s2i__icon-link:hover > i {
             background-color: #2E99E6;
         }
-        .classname {
+        .s2i__classname {
             display: block;
             font-family: monospace;
             font-size: 10px;
@@ -270,17 +270,17 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
     </style>
   </head>
   <body>
-    <div class="page-wrap">
-        <h1 class="page-title">${he.escape(fontName)}</h1>
-        <div class="container">
+    <div class="s2i__page-wrap">
+        <h1 class="s2i__page-title">${he.escape(fontName)}</h1>
+        <div class="s2i__container">
             ${htmlIcons.join('\n            ')}
         </div>
     </div>
     <script>
-        [].forEach.call(document.querySelectorAll( '.icon-link' ), function (a) {
+        [].forEach.call(document.querySelectorAll( '.s2i__icon-link' ), function (a) {
             a.addEventListener('click', function(ev) {
                 ev.preventDefault();
-                let classname = a.querySelector('.classname');
+                let classname = a.querySelector('.s2i__classname');
                 if(classname) {
                     let range = document.createRange();
                     range.selectNodeContents(classname);
