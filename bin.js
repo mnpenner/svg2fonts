@@ -66,6 +66,14 @@ parser.addArgument(
     }
 );
 
+parser.addArgument(
+    '--directory-separator',
+    {
+        help: 'The string to use in CSS class names when the icon files are in sub-directories',
+        defaultValue: '-'
+    }
+);
+
 const args = parser.parseArgs();
 
 if(!args.prefix && !args.base) {
@@ -97,6 +105,7 @@ const eotFile = `${outputDir}/${fileName}.eot`;
 const cssFile = `${outputDir}/${fileName}.css`;
 const htmlFile = `${outputDir}/${fileName}.html`;
 const jsFile = `${outputDir}/${fileName}.js`; // map icon name to css class and/or character
+const codePointFile = `${outputDir}/${fileName}-chars.json`;
 
 
 mkdirp.sync(outputDir);
@@ -129,7 +138,7 @@ readDirDeep(inputDir).then(icons => {
 
     // console.log(icons);process.exit();
 
-    let codePoint = 0xF000;
+    let codePointCounter = 0xF000;
 
     const cssDir = path.dirname(cssFile);
     const htmlDir = path.dirname(htmlFile);
@@ -164,13 +173,31 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
     let cssIcons = [];
     let htmlIcons = [];
     let iconMap = {};
+    let codePointMap = {};
+
+    try {
+        codePointMap = JSON.parse(fs.readFileSync(codePointFile, {encoding: 'utf8'}));
+        codePointCounter = Math.max(...Object.values(codePointMap)) + 1;
+    } catch(err) {
+        if(err.code === 'ENOENT') {
+            console.log(`'${codePointFile}' not found, generating new code points`);
+        } else {
+            throw err;
+        }
+    }
 
     for(let icon of icons) {
         let glyph = fs.createReadStream(icon);
 
-        let iconName = path.relative(inputDir, icon).slice(0, -4).replace(/[\/\\]+/g, '-');
-
-        let iconChar = String.fromCodePoint(codePoint++);
+        let relPath = path.relative(inputDir, icon);
+        let iconName = relPath.slice(0, -4).replace(/[\/\\]+/g, args.directory_separator);
+        
+        if(!codePointMap[relPath]) {
+            codePointMap[relPath] = codePointCounter++;
+        }
+        
+        let iconChar = String.fromCodePoint(codePointMap[relPath]);
+        
         glyph.metadata = {
             unicode: [iconChar],
             name: iconName,
@@ -197,7 +224,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         htmlIcons.push(`<a href="" class="s2i__icon-link"><i class="${he.escape(htmlClass)}"></i><span class="s2i__classname">${he.escape(htmlClass)}</span></a>`);
         iconMap[_.camelCase(iconName)] = htmlClass;
     }
-
+    
     css += cssIcons.join('\n');
 
     fontStream.end();
@@ -210,6 +237,11 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
     fs.writeFile(cssFile, css, {encoding: 'utf8'}, err => {
         if(err) throw err;
         console.log(`Wrote ${cssFile}`);
+    });
+
+    fs.writeFile(codePointFile, JSON.stringify(codePointMap), {encoding: 'utf8'}, err => {
+        if(err) throw err;
+        console.log(`Wrote ${codePointFile}`);
     });
 
     let html = `
