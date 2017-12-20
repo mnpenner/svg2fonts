@@ -105,6 +105,8 @@ const eotFile = `${outputDir}/${fileName}.eot`;
 const cssFile = `${outputDir}/${fileName}.css`;
 const htmlFile = `${outputDir}/${fileName}.html`;
 const jsFile = `${outputDir}/${fileName}.js`; // map icon name to css class and/or character
+// TODO: should we use a JSON file instead?
+// TODO: should we allow customization over how the names are generated (allow something other than camelCase)?
 const codePointFile = `${outputDir}/${fileName}-chars.json`;
 
 
@@ -239,7 +241,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         console.log(`Wrote ${cssFile}`);
     });
 
-    fs.writeFile(codePointFile, JSON.stringify(codePointMap), {encoding: 'utf8'}, err => {
+    fs.writeFile(codePointFile, JSON.stringify(codePointMap, null, 4), {encoding: 'utf8'}, err => {
         if(err) throw err;
         console.log(`Wrote ${codePointFile}`);
     });
