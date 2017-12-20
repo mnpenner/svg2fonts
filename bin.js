@@ -231,21 +231,22 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         }
         .s2i__container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, auto));
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             grid-gap: 3px;
         }
         .s2i__icon-link {
-            box-sizing: border-box;
             display: block;
             text-align: center;
             border: 1px solid #ccc;
             padding: 5px;
             text-decoration: none;
             color: black;
+            overflow: hidden;
         }
         .s2i__icon-link:hover {
             background-color: #3af;
             color: white;
+            border-color: #2E99E6;
         }
         .s2i__icon-link > i {
             font-size: 32px;
