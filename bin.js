@@ -3,7 +3,7 @@
 /* eslint-disable no-sync */
 'use strict';
 
-const svgicons2svgfont = require('svgicons2svgfont');
+const SVGIcons2SVGFontStream = require('svgicons2svgfont');
 const fs = require('fs');
 const path = require('path');
 const svg2ttf = require('svg2ttf');
@@ -101,12 +101,12 @@ const jsFile = `${outputDir}/${fileName}.js`; // map icon name to css class and/
 
 mkdirp.sync(outputDir);
 
-const fontStream = svgicons2svgfont({
+const fontStream = new SVGIcons2SVGFontStream({
     fontName: fontName,
     normalize: true,
     fontHeight: 5000,
     fixedWidth: false,
-    centerHorizontally: false,
+    centerHorizontally: true,
     log: () => {
     },
 });
