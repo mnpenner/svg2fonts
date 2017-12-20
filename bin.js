@@ -230,22 +230,18 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
             padding: 0 1rem;
         }
         .s2i__container {
-            display: flex;
-            flex-flow: row wrap;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, auto));
+            grid-gap: 3px;
         }
         .s2i__icon-link {
+            box-sizing: border-box;
             display: block;
             text-align: center;
             border: 1px solid #ccc;
             padding: 5px;
-            margin: 3px;
-            flex: 1 1 100px;
-            width: 100px;
             text-decoration: none;
             color: black;
-            min-width: 100px;
-            max-width: 150px;
         }
         .s2i__icon-link:hover {
             background-color: #3af;
@@ -277,7 +273,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         </div>
     </div>
     <script>
-        [].forEach.call(document.querySelectorAll( '.s2i__icon-link' ), function (a) {
+        Array.prototype.forEach.call(document.querySelectorAll( '.s2i__icon-link' ), function (a) {
             a.addEventListener('click', function(ev) {
                 ev.preventDefault();
                 let classname = a.querySelector('.s2i__classname');
