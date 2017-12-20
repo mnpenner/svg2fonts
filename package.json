@@ -1,6 +1,6 @@
 {
   "name": "svg2fonts",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "dependencies": {
     "argparse": "^1.0.9",
     "cssesc": "^1.0.0",
