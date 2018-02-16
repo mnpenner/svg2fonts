@@ -74,6 +74,14 @@ parser.addArgument(
     }
 );
 
+parser.addArgument(
+    '--fixed-width',
+    {
+        help: 'Creates a monospace font of the width of the largest input icon',
+        action: 'storeTrue',
+    }
+);
+
 const args = parser.parseArgs();
 
 if(!args.prefix && !args.base) {
@@ -116,7 +124,7 @@ const fontStream = new SVGIcons2SVGFontStream({
     fontName: fontName,
     normalize: true,
     fontHeight: 5000,
-    fixedWidth: false,
+    fixedWidth: args.fixed_width,
     centerHorizontally: true,
     log: () => {
     },
@@ -284,7 +292,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         }
         .s2i__icon-link > i {
             font-size: 32px;
-            background-color: #eee;
+            background-color: #e8e8e8;
         }
         .s2i__icon-link:hover > i {
             background-color: #2E99E6;
