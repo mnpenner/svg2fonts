@@ -143,6 +143,7 @@ fontStream.pipe(svgFileStream)
 
 
 readDirDeep(inputDir).then(icons => {
+    icons = icons.filter(filename => /\.svg$/i.test(filename));
     const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
     icons.sort(collator.compare);
 

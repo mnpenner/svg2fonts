@@ -1,21 +1,21 @@
 {
   "name": "svg2fonts",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "dependencies": {
-    "argparse": "^1.0.9",
-    "cssesc": "^1.0.0",
-    "he": "^1.1.1",
-    "lodash": "^4.17.4",
+    "argparse": "^1",
+    "cssesc": "^1",
+    "he": "^1",
+    "lodash": "^4",
     "mkdirp": "^0.5.1",
-    "sanitize-filename": "^1.6.1",
-    "svg2ttf": "^4.1.0",
-    "svgicons2svgfont": "^9.0.0",
-    "ttf2eot": "^2.0.0",
-    "ttf2woff": "^2.0.1",
-    "ttf2woff2": "^2.0.3"
+    "sanitize-filename": "^1.6",
+    "svg2ttf": "^4",
+    "svgicons2svgfont": "^9",
+    "ttf2eot": "^2",
+    "ttf2woff": "^2",
+    "ttf2woff2": "^2"
   },
   "scripts": {
-    "test": "node bin.js test/icons -o test/out -n wxicons -p icon-"
+    "test": "node bin.js test/icons -o test/out -n FontAwesome -f fontawesome -p fa-"
   },
   "repository": "https://bitbucket.org/nucleuslabs/svg2iconfont",
   "author": "Mark Penner <mpenner@nucleuslabs.com>",
