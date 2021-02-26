@@ -356,6 +356,6 @@ function createFonts() {
     fs.writeFileSync(woff2FontFile, ttf2woff2(ttfBuffer));
     console.log(`Wrote ${woff2FontFile}`);
 
-    fs.writeFileSync(eotFile, ttf2eot(ttfBuffer));
+    fs.writeFileSync(eotFile, ttf2eot(ttfBuffer).buffer);
     console.log(`Wrote ${eotFile}`);
 }
