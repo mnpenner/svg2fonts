@@ -20,69 +20,77 @@ const {ArgumentParser} = require('argparse');
 
 
 const parser = new ArgumentParser({
-    version: require('./package.json').version,
-    addHelp: true,
+    add_help: true,
     description: "Converts a directory full of SVG icons into webfonts"
 });
-parser.addArgument(
+
+parser.add_argument(
+    '-v', '--version',
+    {
+        action: 'version',
+        version: require('./package.json').version
+    }
+);
+
+parser.add_argument(
     'src',
     {
         help: 'Source directory'
     }
 );
 
-parser.addArgument(
-    ['-o', '--out-dir'],
+parser.add_argument(
+    '-o', '--out-dir',
     {
         help: 'Output directory'
     }
 );
 
-parser.addArgument(
-    ['-n', '--font-name'],
+parser.add_argument(
+    '-n', '--font-name',
     {
         help: 'Font name',
     }
 );
 
-parser.addArgument(
-    ['-f', '--file'],
+parser.add_argument(
+    '-f', '--file',
     {
         help: 'Output filenames (without extension)',
     }
 );
 
-parser.addArgument(
-    ['-p', '--prefix'],
+parser.add_argument(
+    '-p', '--prefix',
     {
         help: 'CSS class name prefix',
     }
 );
 
-parser.addArgument(
-    ['-b', '--base'],
+parser.add_argument(
+    '-b', '--base',
     {
         help: 'CSS class name added to all icons',
     }
 );
 
-parser.addArgument(
+parser.add_argument(
     '--directory-separator',
     {
         help: 'The string to use in CSS class names when the icon files are in sub-directories',
-        defaultValue: '-'
+        default: '-'
     }
 );
 
-parser.addArgument(
+parser.add_argument(
     '--fixed-width',
     {
         help: 'Creates a monospace font of the width of the largest input icon',
-        action: 'storeTrue',
+        action: 'store_true',
     }
 );
 
-const args = parser.parseArgs();
+const args = parser.parse_args();
 
 if(!args.prefix && !args.base) {
     console.error(`${path.basename(process.argv[1])}: Not enough arguments. Either --prefix, --base or both must be provided.`);
@@ -202,13 +210,13 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
 
         let relPath = path.relative(inputDir, icon);
         let iconName = relPath.slice(0, -4).replace(/[\/\\]+/g, args.directory_separator);
-        
+
         if(!codePointMap[relPath]) {
             codePointMap[relPath] = codePointCounter++;
         }
-        
+
         let iconChar = String.fromCodePoint(codePointMap[relPath]);
-        
+
         glyph.metadata = {
             unicode: [iconChar],
             name: iconName,
@@ -235,7 +243,7 @@ ${cssBase ? `.${cssId(cssBase)}` : `[class^="${cssId(cssPrefix)}"], [class*=" ${
         htmlIcons.push(`<a href="" class="s2i__icon-link"><i class="${he.escape(htmlClass)}"></i><span class="s2i__classname">${he.escape(htmlClass)}</span></a>`);
         iconMap[_.camelCase(iconName)] = htmlClass;
     }
-    
+
     css += cssIcons.join('\n');
 
     fontStream.end();
