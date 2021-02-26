@@ -1,6 +1,6 @@
 {
   "name": "svg2fonts",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "dependencies": {
     "argparse": "^2.0.1",
     "cssesc": "^3.0.0",
@@ -18,8 +18,8 @@
     "test": "node bin.js test/icons -o test/out -n FontAwesome -f fontawesome -p fa-",
     "serve": "npx http-server test/out"
   },
-  "repository": "https://bitbucket.org/nucleuslabs/svg2iconfont",
-  "author": "Mark Penner <mpenner@nucleuslabs.com>",
+  "repository": "https://github.com/mnpenner/svg2fonts",
+  "author": "Mark Penner <npm@mpen.ca>",
   "license": "MIT",
   "bin": "bin.js",
   "publishConfig": {
